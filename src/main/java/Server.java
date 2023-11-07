@@ -1,5 +1,5 @@
 import com.google.gson.Gson;
-
+import lombok.extern.slf4j.Slf4j;
 import java.net.*;
 import java.io.*;
 import java.time.Duration;
@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Slf4j
 public enum Server {
     INSTANCE;
 
@@ -22,21 +23,22 @@ public enum Server {
     public static final String VERSION = "0.1.0";
     public static final LocalDate timeOfCreate = LocalDate.of(2000, 10, 1);
 
+
     public void startServer(int port) {
 
         try {
             serverSocket = new ServerSocket(port);
             serverStartTime = LocalDateTime.now();
-            System.out.println("Server started.");
-            System.out.println("I'am waiting for client.....");
+            log.info("Server started.");
+            log.info("I'am waiting for client.....");
             socket = serverSocket.accept();
-            System.out.println("Client accepted.");
+            log.info("Client accepted.");
             dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
             getRequestFromServer();
 
         } catch (IOException i) {
-            System.out.println("Exception" + i);
+            log.error("Exception" + i);
         }
     }
 
@@ -50,7 +52,7 @@ public enum Server {
                 switch (line) {
                     case STOP:
                         stop();
-                        System.out.println("Connection was terminated");
+                        log.info("Connection was terminated");
                         return;
                     case UPTIME:
                         upTime();
@@ -65,15 +67,19 @@ public enum Server {
                         throw new IllegalArgumentException("If you need help, write - HELP");
                 }
             } catch (IOException i) {
-                System.out.println("Exception" + i);
+                log.error("Exception" + i);
             }
         }
     }
 
-    public void stop() throws IOException {
-        dataInputStream.close();
-        serverSocket.close();
-        socket.close();
+    public void stop() {
+        try {
+            dataInputStream.close();
+            serverSocket.close();
+            socket.close();
+        } catch (IOException ioException) {
+            log.error("Exception" + ioException);
+        }
     }
 
     public void getHelp() {
